@@ -22,8 +22,15 @@ app.use(
 app.use(express.json());
 
 // Make sure the demo account exists (runs its work once per instance).
+// Non-fatal: if the store isn't reachable yet the request still proceeds.
 app.use((_req, _res, next) => {
-  ensureSeeded().then(() => next(), next);
+  ensureSeeded().then(
+    () => next(),
+    (err) => {
+      console.error('seed skipped:', err.message);
+      next();
+    },
+  );
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'gymrank-api' }));
