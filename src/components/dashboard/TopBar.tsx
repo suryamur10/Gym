@@ -1,17 +1,24 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Search } from 'lucide-react';
 import Logo from '../Logo';
 import { useAuth } from '../../context/AuthContext';
-import { currentUser } from '../../data/mock';
 import { initials } from '../../lib/format';
 
-const nav = ['Dashboard', 'Lifts', 'Challenges', 'Leaderboard'];
+const nav: { label: string; to: string }[] = [
+  { label: 'Dashboard', to: '/dashboard' },
+  { label: 'Lifts', to: '#' },
+  { label: 'Challenges', to: '#' },
+  { label: 'Leaderboard', to: '#' },
+  { label: 'Find a Friend', to: '/friends' },
+];
 
 export default function TopBar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [search, setSearch] = useState('');
 
   const handleLogout = async () => {
     if (loggingOut) return;
@@ -20,7 +27,14 @@ export default function TopBar() {
     navigate('/login', { replace: true });
   };
 
-  const avatar = user ? initials(user.name) : currentUser.initials;
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = search.trim();
+    navigate(q ? `/friends?q=${encodeURIComponent(q)}` : '/friends');
+    setSearch('');
+  };
+
+  const avatar = user ? initials(user.name) : '?';
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-bg/85 backdrop-blur">
@@ -29,11 +43,11 @@ export default function TopBar() {
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {nav.map((item) => {
-            const active = item === 'Dashboard';
+            const active = item.to !== '#' && location.pathname === item.to;
             return (
-              <a
-                key={item}
-                href="#"
+              <Link
+                key={item.label}
+                to={item.to}
                 aria-current={active ? 'page' : undefined}
                 className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
                   active
@@ -41,13 +55,13 @@ export default function TopBar() {
                     : 'text-muted hover:bg-surface-2/60 hover:text-text'
                 }`}
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             );
           })}
         </nav>
 
-        <div className="relative ml-auto hidden w-56 lg:block">
+        <form onSubmit={handleSearch} className="relative ml-auto hidden w-56 lg:block">
           <Search
             size={16}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
@@ -55,16 +69,18 @@ export default function TopBar() {
           />
           <input
             type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Find a lifter…"
             aria-label="Find a lifter"
             className="w-full rounded-xl border border-border bg-surface-2 py-2 pl-9 pr-3 text-sm placeholder:text-muted-2 focus:border-accent"
           />
-        </div>
+        </form>
 
         <div className="ml-auto flex items-center gap-3 lg:ml-0">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-surface py-1 pl-1 pr-3">
-            <span className="rounded-lg bg-tier-gold px-2 py-1 font-display text-xs font-bold uppercase tracking-wider text-[#1a1205]">
-              {currentUser.tierLabel}
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-surface py-1 pl-3 pr-1">
+            <span className="hidden font-display text-xs font-semibold text-muted sm:inline">
+              {user?.handle}
             </span>
             <span
               className="grid h-7 w-7 place-items-center rounded-full bg-surface-3 font-display text-xs font-bold"

@@ -11,7 +11,14 @@ export default function LiftRow({ lift }: { lift: Lift }) {
     <li className="flex items-center gap-4 py-3.5">
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="truncate font-semibold">{lift.name}</p>
+          <p className="truncate font-semibold">
+            {lift.name}
+            {lift.sets != null && lift.reps != null && (
+              <span className="ml-2 text-xs font-medium text-muted-2">
+                {lift.sets}×{lift.reps}
+              </span>
+            )}
+          </p>
           <p className="shrink-0 font-display text-xl font-extrabold tabular-nums">
             {lift.weight}
             <span className="ml-1 text-xs font-semibold text-muted">lb</span>

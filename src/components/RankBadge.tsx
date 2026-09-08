@@ -2,8 +2,9 @@ import { Shield } from 'lucide-react';
 import type { Tier } from '../data/mock';
 
 const tierBg: Record<Tier, string> = {
-  gold: 'bg-tier-gold',
+  bronze: 'bg-tier-bronze',
   silver: 'bg-tier-silver',
+  gold: 'bg-tier-gold',
   platinum: 'bg-tier-platinum',
 };
 
