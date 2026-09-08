@@ -14,6 +14,7 @@ import {
   getRefreshToken,
   onForcedLogout,
   type AuthUser,
+  type MePatch,
 } from '../lib/api';
 
 type Status = 'loading' | 'authenticated' | 'anonymous';
@@ -23,6 +24,7 @@ interface AuthContextValue {
   status: Status;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  updateMe: (patch: MePatch) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -82,6 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated');
   }, []);
 
+  const updateMe = useCallback(async (patch: MePatch) => {
+    const updated = await authApi.updateMe(patch);
+    setUser(updated);
+  }, []);
+
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
@@ -89,8 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, status, login, register, logout }),
-    [user, status, login, register, logout],
+    () => ({ user, status, login, register, updateMe, logout }),
+    [user, status, login, register, updateMe, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

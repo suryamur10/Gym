@@ -13,12 +13,30 @@ const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\
 const ACCESS_KEY = 'gr_access';
 const REFRESH_KEY = 'gr_refresh';
 
+export type Gender = 'male' | 'female' | 'other' | 'na';
+export type Goal = 'lose_weight' | 'gain_muscle' | 'build_strength';
+
+export interface Profile {
+  weightLb?: number | null;
+  heightIn?: number | null;
+  age?: number | null;
+  gender?: Gender | null;
+  goal?: Goal | null;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
   handle: string;
   createdAt: string;
+  profile: Profile | null;
+  onboardingComplete: boolean;
+}
+
+export interface MePatch {
+  profile?: Profile | null;
+  onboardingComplete?: boolean;
 }
 
 interface SessionResponse {
@@ -170,6 +188,14 @@ export const authApi = {
     return data.user;
   },
 
+  async updateMe(patch: MePatch): Promise<AuthUser> {
+    const data = await request<{ user: AuthUser }>('/auth/me', {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    });
+    return data.user;
+  },
+
   async logout(): Promise<void> {
     const refreshToken = getRefreshToken();
     clearTokens();
@@ -183,5 +209,156 @@ export const authApi = {
     } catch {
       /* best effort */
     }
+  },
+};
+
+// --- friends ---------------------------------------------------------------
+
+export type FriendStatus = 'none' | 'friends' | 'outgoing' | 'incoming';
+
+export interface LifterResult extends AuthUser {
+  friendStatus: FriendStatus;
+}
+
+export interface FriendUser extends AuthUser {
+  friendshipId: string;
+}
+
+export interface FriendsSnapshot {
+  friends: FriendUser[];
+  incoming: FriendUser[];
+  outgoing: FriendUser[];
+}
+
+export const usersApi = {
+  async search(query: string): Promise<LifterResult[]> {
+    const q = query.trim();
+    if (q.length < 2) return [];
+    const data = await request<{ results: LifterResult[] }>(
+      `/users/search?q=${encodeURIComponent(q)}`,
+    );
+    return data.results;
+  },
+
+  async friends(): Promise<FriendsSnapshot> {
+    return request<FriendsSnapshot>('/users/friends');
+  },
+
+  /** Send a friend request, or accept an incoming one. Returns the new status. */
+  async addFriend(userId: string): Promise<FriendStatus> {
+    const data = await request<{ user: LifterResult }>(`/users/${userId}/friend`, {
+      method: 'POST',
+    });
+    return data.user.friendStatus;
+  },
+
+  /** Unfriend, cancel a sent request, or decline an incoming one. */
+  async removeFriend(userId: string): Promise<FriendStatus> {
+    const data = await request<{ friendStatus: FriendStatus }>(`/users/${userId}/friend`, {
+      method: 'DELETE',
+    });
+    return data.friendStatus;
+  },
+};
+
+// --- lifts & dashboard ------------------------------------------------------
+
+export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
+
+/** The viewer's local weekday, Mon-indexed to match WEEKDAYS. */
+export const todayWeekday = (): Weekday => WEEKDAYS[(new Date().getDay() + 6) % 7];
+
+export interface NewLift {
+  exercise: string;
+  weightLb: number;
+  sets: number;
+  reps: number;
+  day: Weekday;
+}
+
+export interface DashLift {
+  id: string;
+  name: string;
+  weight: number;
+  sets: number;
+  reps: number;
+  volume: number;
+  day: Weekday;
+  delta: number;
+  isPr: boolean;
+  progress: number;
+}
+
+export interface DashRank {
+  placed: boolean;
+  label: string;
+  hint?: string;
+  tier?: 'bronze';
+  nextTier?: string;
+  rp?: number;
+  rpToNext?: number;
+  progressPct?: number;
+}
+
+export interface HeadToHead {
+  id: string;
+  metric: string;
+  you: string;
+  rivalName: string;
+  rivalScore: string;
+  daysLeft: number;
+  leading: boolean;
+}
+
+export interface ChallengeFriend {
+  id: string;
+  name: string;
+  handle: string;
+  challenged: boolean;
+}
+
+export interface DashboardView {
+  rank: DashRank;
+  week: {
+    label: string;
+    sessions: number;
+    volume: number;
+    volumeDeltaPct: number;
+    newPrs: number;
+    prLifts: string;
+    activeChallenges: number;
+    challengesLeading: number;
+  };
+  lifts: DashLift[];
+  volumeByDay: { day: Weekday; volume: number }[];
+  friends: ChallengeFriend[];
+  activeChallenges: HeadToHead[];
+}
+
+export const liftsApi = {
+  async add(lift: NewLift): Promise<void> {
+    await request('/lifts', { method: 'POST', body: JSON.stringify(lift) });
+  },
+
+  async remove(id: string): Promise<void> {
+    await request(`/lifts/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const dashboardApi = {
+  async get(): Promise<DashboardView> {
+    return request<DashboardView>('/dashboard');
+  },
+};
+
+export const challengesApi = {
+  /** Call out a friend to a weekly-volume head-to-head. */
+  async create(opponentId: string): Promise<void> {
+    await request('/challenges', { method: 'POST', body: JSON.stringify({ opponentId }) });
+  },
+
+  async end(id: string): Promise<void> {
+    await request(`/challenges/${id}`, { method: 'DELETE' });
   },
 };

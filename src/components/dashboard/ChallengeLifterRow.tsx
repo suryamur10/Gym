@@ -2,6 +2,7 @@ import type { Rival } from '../../data/mock';
 import { formatLb } from '../../lib/format';
 
 const tierBg: Record<Rival['tier'], string> = {
+  bronze: 'bg-tier-bronze',
   gold: 'bg-tier-gold',
   silver: 'bg-tier-silver',
   platinum: 'bg-tier-platinum',

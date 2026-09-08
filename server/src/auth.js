@@ -19,7 +19,7 @@ export function signAccessToken(user) {
 }
 
 /** Refresh tokens carry a jti so they can be revoked and rotated server-side. */
-export function issueRefreshToken(user) {
+export async function issueRefreshToken(user) {
   const jti = randomUUID();
   const expiresInSec = REFRESH_TTL_DAYS * 24 * 60 * 60;
   const token = jwt.sign({}, REFRESH_SECRET, {
@@ -29,7 +29,7 @@ export function issueRefreshToken(user) {
     jwtid: jti,
     expiresIn: expiresInSec,
   });
-  db.addRefreshToken({ jti, userId: user.id, expiresAt: Date.now() + expiresInSec * 1000 });
+  await db.addRefreshToken({ jti, userId: user.id, expiresAt: Date.now() + expiresInSec * 1000 });
   return token;
 }
 

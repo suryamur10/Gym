@@ -1,10 +1,13 @@
-import { volumeByDay } from '../../data/mock';
 import { formatNumber } from '../../lib/format';
 
 const TRACK_PX = 128;
 
-export default function VolumeChart() {
-  const max = Math.max(...volumeByDay.map((d) => d.volume));
+interface VolumeChartProps {
+  data: { day: string; volume: number }[];
+}
+
+export default function VolumeChart({ data }: VolumeChartProps) {
+  const max = Math.max(0, ...data.map((d) => d.volume));
 
   return (
     <div className="card p-4">
@@ -12,7 +15,7 @@ export default function VolumeChart() {
       <p className="mb-4 text-xs text-muted">Mon–Sun · lb moved</p>
 
       <div className="flex items-end gap-2 sm:gap-3" style={{ height: TRACK_PX }}>
-        {volumeByDay.map((d) => {
+        {data.map((d) => {
           const h = max > 0 ? Math.round((d.volume / max) * TRACK_PX) : 0;
           const tallest = d.volume === max && d.volume > 0;
           return (
@@ -32,7 +35,7 @@ export default function VolumeChart() {
       </div>
 
       <div className="mt-2 flex gap-2 sm:gap-3">
-        {volumeByDay.map((d) => {
+        {data.map((d) => {
           const tallest = d.volume === max && d.volume > 0;
           return (
             <span

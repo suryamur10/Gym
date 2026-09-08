@@ -29,6 +29,7 @@ export default {
         '2xl': '14px',
       },
       backgroundImage: {
+        'tier-bronze': 'linear-gradient(135deg, #E8B98A 0%, #B07636 100%)',
         'tier-gold': 'linear-gradient(135deg, #F7D268 0%, #C8933A 100%)',
         'tier-silver': 'linear-gradient(135deg, #E4E9F0 0%, #9AA4B4 100%)',
         'tier-platinum': 'linear-gradient(135deg, #8FE3D6 0%, #3FA0C4 100%)',

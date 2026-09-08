@@ -1,4 +1,4 @@
-export type Tier = 'gold' | 'silver' | 'platinum';
+export type Tier = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 export interface LeaderboardEntry {
   name: string;
@@ -15,6 +15,8 @@ export interface Lift {
   day: string;
   /** progress toward the next milestone, 0–100 */
   progress: number;
+  sets?: number;
+  reps?: number;
 }
 
 export interface VolumeDay {

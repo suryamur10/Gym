@@ -1,7 +1,12 @@
 import { Swords } from 'lucide-react';
-import type { HeadToHead } from '../../data/mock';
+import type { HeadToHead } from '../../lib/api';
 
-export default function ChallengeCard({ c }: { c: HeadToHead }) {
+interface ChallengeCardProps {
+  c: HeadToHead;
+  onEnd?: () => void;
+}
+
+export default function ChallengeCard({ c, onEnd }: ChallengeCardProps) {
   return (
     <div className="card p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -9,13 +14,24 @@ export default function ChallengeCard({ c }: { c: HeadToHead }) {
           <Swords size={14} aria-hidden="true" />
           {c.metric}
         </span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-            c.leading ? 'bg-win/10 text-win' : 'bg-loss/10 text-loss'
-          }`}
-        >
-          {c.leading ? 'You leading' : 'Trailing'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+              c.leading ? 'bg-win/10 text-win' : 'bg-loss/10 text-loss'
+            }`}
+          >
+            {c.leading ? 'You leading' : 'Trailing'}
+          </span>
+          {onEnd && (
+            <button
+              type="button"
+              onClick={onEnd}
+              className="text-xs font-semibold text-muted-2 hover:text-loss"
+            >
+              End
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

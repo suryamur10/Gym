@@ -8,7 +8,7 @@ import { ApiError } from '../lib/api';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register, status } = useAuth();
+  const { register, status, user } = useAuth();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,7 +17,9 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (status === 'authenticated') return <Navigate to="/dashboard" replace />;
+  if (status === 'authenticated') {
+    return <Navigate to={user?.onboardingComplete ? '/dashboard' : '/onboarding'} replace />;
+  }
 
   const passwordTooShort = password.length > 0 && password.length < 8;
 
@@ -34,7 +36,7 @@ export default function Register() {
     setSubmitting(true);
     try {
       await register(name.trim(), email.trim(), password);
-      navigate('/dashboard', { replace: true });
+      navigate('/onboarding', { replace: true });
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : 'Could not reach the server. Try again.',
